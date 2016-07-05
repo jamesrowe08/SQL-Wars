@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body onload="startGame()">
+<script>
+
+    var wattImage = new Image();
+    var mongoImage = new Image();
+    var backgroundImage = new Image();
+
+    var wattLoaded = false;
+    var mongoLoaded = false;
+    var backgroundLoaded = false;
+
+    var canvas = document.createElement('canvas');
+    var context;
+
+    var canvasWidth = 1224;
+    var canvasHeight = 768;
+
+    var wattLocationX = 10;
+    var wattLocationY = this.canvas.height / 2;
+
+    var currentShotId = 0;
+    var currentEnemyId = 0;
+
+    var currentEnemies = [];
+    var currentShots = [];
+
+    function startGame() {
+        this.context = this.canvas.getContext("2d");
+        document.body.appendChild(canvas);
+
+        wattImage.src = "watt.jpg";
+        wattImage.onload = function () {
+            wattLoaded = true;
+        }
+        mongoImage.src = "mongo.png";
+        mongoImage.onload = function() {
+            mongoLoaded = true;
+        }
+        backgroundImage.src = "sqlbackground.jpg";
+        backgroundImage.onload = function() {
+            backgroundLoaded = true;
+        }
+
+        keyBindings();
+        setInterval(drawAllEntities, 50);
+        setInterval(spawnEnemiesIfNeeded, 1000);
+        //setInterval(hitDetection, 2000);
+    }
+
+
+    function keyBindings() {
+        document.onkeydown = function (e) {
+            e = e || window.event;
+            switch (e.which || e.keyCode) {
+                case 37: // left
+                    wattLocationX = wattLocationX - 10;
+                    break;
+                case 38: // up
+                    wattLocationY = wattLocationY - 10;
+                    break;
+                case 39: // right
+                    wattLocationX = wattLocationX + 10;
+                    break;
+                case 40: // down
+                    wattLocationY = wattLocationY  + 10;
+                    break;
+                case 32: //spacebar
+                    watt.shoot();
+                    break;
+                default:
+                    return; // exit this handler for other keys
+            }
+        }
+    }
+
+    function drawAllEntities() {
+        gameArea.clear();
+
+        gameArea.draw();
+
+        watt.draw();
+
+        for(var i = 0; i < this.currentShots.length; i++) {
+            currentShots[i].draw();
+        }
+
+        for(var i =0; i < this.currentEnemies.length; i++) {
+            currentEnemies[i].draw();
+            currentEnemies[i].doMove();
+        }
+    }
+
+    var gameArea = {
+        draw: function () {
+            canvas.width = canvasWidth;
+            canvas.height = canvasHeight;
+            canvas.style.zIndex = 8;
+            canvas.style.position = "absolute";
+            canvas.style.border = "1px solid";
+            if(backgroundLoaded) {
+                context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+            }
+        },
+        clear: function () {
+            context.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+    }
+
+
+    var watt = {
+        img : document.createElement('IMG'),
+        draw: function() {
+            if(wattLoaded) {
+                context.drawImage(wattImage, wattLocationX, wattLocationY, 50, 50);
+            }
+        },
+        shoot: function() {
+            var shot = {
+                id: currentShotId++,
+                xPos : wattLocationX,
+                yPos : wattLocationY,
+                draw: function() {
+                    context.fillText("DACPAC", this.xPos, this.yPos);
+                    this.xPos = this.xPos + 50;
+                    if(this.xPos > canvasWidth) {
+                        removeBullet(this);
+                    }
+
+                    for(var i =0; i < currentEnemies.length; i++) {
+                        if (currentEnemies[i].xPos < this.xPos + 10 &&
+                                currentEnemies[i].xPos + 100 > this.xPos &&
+                                currentEnemies[i].yPos < this.yPos + 10 &&
+                                100 + currentEnemies[i].yPos > this.yPos) {
+                             enemyHit(i);
+                            removeBullet(this);
+                        }
+                    }
+                }
+            }
+            currentShots.push(shot);
+        }
+    }
+
+    function createMongoEnemy() {
+        return mongoEnemy = {
+            id: currentEnemyId++,
+            health: 100,
+            xPos: canvasWidth + 10,
+            yPos: Math.floor((Math.random() * canvasHeight) + 1),
+            draw: function () {
+                if(mongoLoaded) {
+                    context.drawImage(mongoImage, this.xPos, this.yPos, 100, 100);
+                }
+            },
+            doMove: function() {
+                if(this.xPos < 0) {
+                    var index = currentEnemies.indexOf(this);
+                    if(index != -1) {
+                        currentEnemies.splice(index, 1);
+                    }
+                }
+               this.xPos = this.xPos - 10;
+            }
+        }
+    }
+
+    function removeBullet(currentShot) {
+        currentShots.splice(currentShots.indexOf(currentShot), 1);
+    }
+
+    function enemyHit(enemyIndex) {
+        invertImageColors(currentEnemies[enemyIndex].xPos, currentEnemies[enemyIndex].yPos);
+        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - 50;
+        if(currentEnemies[enemyIndex].health <= 0) {
+            currentEnemies.splice(enemyIndex, 1);
+        }
+    }
+
+    function spawnEnemiesIfNeeded() {
+        if(this.currentEnemies.length < 20) {
+            var mongoEnemy = createMongoEnemy();
+            this.currentEnemies.push(mongoEnemy);
+        }
+    }
+
+    function invertImageColors(xPos, yPos) {
+        var imageData = this.context.getImageData(xPos, yPos, 100, 100);
+        var data = imageData.data;
+
+        for(var i = 0; i < data.length; i += 4) {
+            // red
+            data[i] = 255 - data[i];
+            // green
+            data[i + 1] = 255 - data[i + 1];
+            // blue
+            data[i + 2] = 255 - data[i + 2];
+        }
+        this.context.putImageData(imageData, xPos, yPos);
+    }
+
+
+
+</script>
+</body>
+</html>
+
