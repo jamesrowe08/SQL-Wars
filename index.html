@@ -25,6 +25,7 @@
 
     var currentEnemies = [];
     var currentShots = [];
+    var currentBombs = [];
 
     var drawInterval;
     var spawnEnemyInterval;
@@ -77,6 +78,9 @@
                 case 32: //spacebar
                     watt.shoot();
                     break;
+                case 66: //b
+                    watt.dropBomb();
+                    break;
                 default:
                     return; // exit this handler for other keys
             }
@@ -97,6 +101,10 @@
         for(var i =0; i < this.currentEnemies.length; i++) {
             currentEnemies[i].draw();
             currentEnemies[i].doMove();
+        }
+
+        for(var i = 0; i < this.currentBombs.length; i++) {
+            currentBombs[i].draw();
         }
     }
 
@@ -160,6 +168,33 @@
                 }
             }
             currentShots.push(shot);
+        },
+        dropBomb: function() {
+            for(var x = -20; x <= 20; x = x + 5) {
+                for(var y = -20; y <= 20; y = y + 5) {
+                    currentBombs.push(createBomb(x,y));
+                }
+            }
+            currentEnemies = [];
+        }
+    }
+
+    function createBomb(movementX, movementY) {
+        return bomb = {
+            xPos: watt.xPos,
+            yPos: watt.yPos,
+            movementX: movementX,
+            movementY: movementY,
+            bombTime: timer,
+            draw: function() {
+                //Clear bomb from array
+                if(timer - this.bombTime > 5) {
+                    currentBombs = [];
+                }
+                context.fillText("SELECT * FROM AssWhooping", this.xPos, this.yPos);
+                this.xPos = this.movementX + this.xPos;
+                this.yPos = this.movementY + this.yPos;
+            }
         }
     }
 
