@@ -20,14 +20,15 @@
     var canvasWidth = 1224;
     var canvasHeight = 768;
 
-    var wattLocationX = 10;
-    var wattLocationY = this.canvas.height / 2;
-
     var currentShotId = 0;
     var currentEnemyId = 0;
 
     var currentEnemies = [];
     var currentShots = [];
+
+    var drawInterval;
+    var spawnEnemyInterval;
+    var timerInterval;
 
     var timer = 0;
 
@@ -49,9 +50,9 @@
         }
 
         keyBindings();
-        setInterval(drawAllEntities, 50);
-        setInterval(spawnEnemiesIfNeeded, 1000);
-        setInterval(function() {
+        drawInterval = setInterval(drawAllEntities, 50);
+        spawnEnemyInterval = setInterval(spawnEnemiesIfNeeded, 1000);
+        timerInterval = setInterval(function() {
             timer++;
         }, 1000);
     }
@@ -62,16 +63,16 @@
             e = e || window.event;
             switch (e.which || e.keyCode) {
                 case 37: // left
-                    wattLocationX = wattLocationX - 10;
+                    watt.xPos = watt.xPos - 10;
                     break;
                 case 38: // up
-                    wattLocationY = wattLocationY - 10;
+                    watt.yPos = watt.yPos - 10;
                     break;
                 case 39: // right
-                    wattLocationX = wattLocationX + 10;
+                    watt.xPos = watt.xPos + 10;
                     break;
                 case 40: // down
-                    wattLocationY = wattLocationY  + 10;
+                    watt.yPos = watt.yPos  + 10;
                     break;
                 case 32: //spacebar
                     watt.shoot();
@@ -112,6 +113,11 @@
             context.font = '20pt Calibri';
             context.fillText("Time on the soapbox: " + timer, 20, 40);
         },
+        drawGameOver: function() {
+            context.fillStyle = 'black';
+            context.font = '30pt Calibri';
+            wrapText(context, "GAME OVER                                                         Watt fought as hard as he could, but alas: SQL Server was no more. MongoDB and it's endless features (Webscale to name one) conquered SQL Server in all it's glory.", 200, 100, 800, 100);
+        },
         clear: function () {
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
@@ -121,16 +127,18 @@
 
     var watt = {
         img : document.createElement('IMG'),
+        yPos: this.canvas.height / 2,
+        xPos: 10,
         draw: function() {
             if(wattLoaded) {
-                context.drawImage(wattImage, wattLocationX, wattLocationY, 50, 50);
+                context.drawImage(wattImage, watt.xPos, watt.yPos, 50, 50);
             }
         },
         shoot: function() {
             var shot = {
                 id: currentShotId++,
-                xPos : wattLocationX,
-                yPos : wattLocationY,
+                xPos : watt.xPos,
+                yPos : watt.yPos,
                 draw: function() {
                     context.fillStyle = 'white';
                     context.font = '12pt Calibri';
@@ -173,6 +181,12 @@
                         currentEnemies.splice(index, 1);
                     }
                 }
+                if (this.xPos < watt.xPos + 50 &&
+                        this.xPos + 100 > watt.xPos &&
+                        this.yPos < watt.yPos + 50 &&
+                        100 + this.yPos > watt.yPos) {
+                    gameOver();
+                }
                this.xPos = this.xPos - 10;
             }
         }
@@ -197,6 +211,14 @@
         }
     }
 
+    function gameOver() {
+        clearInterval(drawInterval);
+        clearInterval(spawnEnemyInterval);
+        clearInterval(timerInterval);
+        gameArea.clear();
+        gameArea.drawGameOver();
+    }
+
     function invertImageColors(xPos, yPos) {
         var imageData = this.context.getImageData(xPos, yPos, 100, 100);
         var data = imageData.data;
@@ -210,6 +232,26 @@
             data[i + 2] = 255 - data[i + 2];
         }
         this.context.putImageData(imageData, xPos, yPos);
+    }
+
+    function wrapText(context, text, x, y, maxWidth, lineHeight) {
+        var words = text.split(' ');
+        var line = '';
+
+        for(var n = 0; n < words.length; n++) {
+            var testLine = line + words[n] + ' ';
+            var metrics = context.measureText(testLine);
+            var testWidth = metrics.width;
+            if (testWidth > maxWidth && n > 0) {
+                context.fillText(line, x, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+            }
+            else {
+                line = testLine;
+            }
+        }
+        context.fillText(line, x, y);
     }
 
 
