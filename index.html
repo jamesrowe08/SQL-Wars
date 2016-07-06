@@ -189,8 +189,8 @@
         shoot: function() {
             var shot = {
                 id: currentShotId++,
-                xPos : watt.xPos,
-                yPos : watt.yPos,
+                xPos : watt.xPos + (wattWidth / 2) + 10,
+                yPos : watt.yPos + (wattWidth / 2),
                 draw: function() {
                     context.fillStyle = 'white';
                     context.font = '12pt Calibri';
