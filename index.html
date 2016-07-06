@@ -40,6 +40,9 @@
 	
     var timer = 0;
 
+    var lastBomb;
+    var isBombActive = false;
+
     var button = [];				//Button map to keep track of which buttons are pressed
 	
     onkeydown = function(k) {                           // key down state handler
@@ -68,7 +71,7 @@
 
         //keyBindings();
         drawInterval = setInterval(drawAllEntities, 50);
-        spawnEnemyInterval = setInterval(spawnEnemiesIfNeeded, 1000);
+        spawnEnemyInterval = setInterval(spawnEnemiesIfNeeded, 500);
         timerInterval = setInterval(function() {
             timer++;
         }, 1000);
@@ -79,8 +82,6 @@
 		
         gameArea.draw();
 
-		//TODO watt.dropBomb();
-		
 		// Handle user input
 		// button[0] = fire           [space bar]
 		// button[5] = thrust left    [left arrow]
@@ -108,18 +109,34 @@
 		}
 		
 		//Cap the max speed
-		if (wattSpeedX > MAX_SPEED) { wattSpeedX = MAX_SPEED; }
-		if (wattSpeedX < -MAX_SPEED) { wattSpeedX = -MAX_SPEED; }
-		if (wattSpeedY > MAX_SPEED) { wattSpeedY = MAX_SPEED; }
-		if (wattSpeedY < -MAX_SPEED) { wattSpeedY = -MAX_SPEED; }
+        if (wattSpeedX > MAX_SPEED) {
+            wattSpeedX = MAX_SPEED;
+        }
+        if (wattSpeedX < -MAX_SPEED) {
+            wattSpeedX = -MAX_SPEED;
+        }
+        if (wattSpeedY > MAX_SPEED) {
+            wattSpeedY = MAX_SPEED;
+        }
+        if (wattSpeedY < -MAX_SPEED) {
+            wattSpeedY = -MAX_SPEED;
+        }
 		
 		watt.xPos = watt.xPos + wattSpeedX;
 		watt.yPos = watt.yPos + wattSpeedY;
 		
-		if (watt.xPos < 0) { watt.xPos = 0;}
-		if (watt.xPos > canvasWidth - wattWidth) { watt.xPos = canvasWidth - wattWidth;}
-		if (watt.yPos < 0) { watt.yPos = 0;}
-		if (watt.yPos > canvasHeight - wattWidth) { watt.yPos = canvasHeight - wattWidth;}
+        if (watt.xPos < 0) {
+            watt.xPos = 0;
+        }
+        if (watt.xPos > canvasWidth - wattWidth) {
+            watt.xPos = canvasWidth - wattWidth;
+        }
+        if (watt.yPos < 0) {
+            watt.yPos = 0;
+        }
+        if (watt.yPos > canvasHeight - wattWidth) {
+            watt.yPos = canvasHeight - wattWidth;
+        }
 		
 		watt.draw();
 
@@ -158,7 +175,7 @@
             canvas.height = canvasHeight;
             canvas.style.position = "absolute";
             canvas.style.border = "1px solid";
-            if(backgroundLoaded) {	
+            if (backgroundLoaded) {	
                 context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
             }
             context.fillStyle = 'white';
@@ -178,7 +195,6 @@
 
 
     var watt = {
-        img : document.createElement('IMG'),
         yPos: this.canvas.height / 2,
         xPos: 10,
         draw: function() {
@@ -214,6 +230,8 @@
             currentShots.push(shot);
         },
         dropBomb: function() {
+            if (lastBomb == null || lastBomb - timer > 20) {
+                lastBomb = timer;
             for(var x = -20; x <= 20; x = x + 5) {
                 for(var y = -20; y <= 20; y = y + 5) {
                     currentBombs.push(createBomb(x,y));
@@ -221,6 +239,7 @@
             }
             currentEnemies = [];
         }
+    }
     }
 
     function createBomb(movementX, movementY) {
@@ -231,9 +250,11 @@
             movementY: movementY,
             bombTime: timer,
             draw: function() {
+                isBombActive = true;
                 //Clear bomb from array
                 if(timer - this.bombTime > 5) {
                     currentBombs = [];
+                    isBombActive = false;
                 }
                 context.fillText("SELECT * FROM AssWhooping", this.xPos, this.yPos);
                 this.xPos = this.movementX + this.xPos;
@@ -248,6 +269,7 @@
             health: 100,
             xPos: canvasWidth + 10,
             yPos: Math.floor((Math.random() * canvasHeight) + 1),
+            speed: Math.floor(Math.random() * (50 - 10 + 1)) + 10,
             draw: function () {
                 if(mongoLoaded) {
                     context.drawImage(mongoImage, this.xPos, this.yPos, 45, 100);
@@ -266,7 +288,7 @@
                         100 + this.yPos > watt.yPos) {
                     gameOver();
                 }
-               this.xPos = this.xPos - 10;
+                this.xPos = this.xPos - this.speed;
             }
         }
     }
@@ -277,14 +299,14 @@
 
     function enemyHit(enemyIndex) {
         invertImageColors(currentEnemies[enemyIndex].xPos, currentEnemies[enemyIndex].yPos);
-        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - 50;
+        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - 25;
         if(currentEnemies[enemyIndex].health <= 0) {
             currentEnemies.splice(enemyIndex, 1);
         }
     }
 
     function spawnEnemiesIfNeeded() {
-        if(this.currentEnemies.length < 20) {
+        if (this.currentEnemies.length < 40 && !isBombActive) {
             var mongoEnemy = createMongoEnemy();
             this.currentEnemies.push(mongoEnemy);
         }
@@ -294,8 +316,10 @@
         clearInterval(drawInterval);
         clearInterval(spawnEnemyInterval);
         clearInterval(timerInterval);
+        setInterval(function () {
         gameArea.clear();
         gameArea.drawGameOver();
+        }, 500)
     }
 
     function invertImageColors(xPos, yPos) {
@@ -334,8 +358,8 @@
     }
 
 
-
 </script>
+<p>Arrow keys to move, Space to shoot, B to drop bombs</p>
 </body>
 </html>
 
