@@ -8,6 +8,7 @@
 	var SPEED_INCREMENT = 8;
 	var SPEED_DECREMENT = SPEED_INCREMENT / 2;
 	var MAX_SPEED = SPEED_INCREMENT * 3;
+	var CURSOR_COUNTDOWN = 20;
 
     var wattImage = new Image();
     var mongoImage = new Image();
@@ -89,6 +90,7 @@
         timerInterval = setInterval(function() {
             timer++;
         }, 1000);
+	
     }
 
     function drawAllEntities() {
@@ -102,7 +104,7 @@
 		// 	button[7] = thrust right   [right arrow]
 		// 	button[6] = climb          [up arrow]
 		// 	button[8] = dive           [down arrow]
-		// 	button[34] = bomb          [b key]
+		// 	button[35] = cursor        [c key]
         if (button[0]) {
 			if (shootInterval == 0) {
 				watt.shoot();
@@ -121,7 +123,7 @@
 		if (button[8]) {
 			wattSpeedY = wattSpeedY + SPEED_INCREMENT;
 		}
-		if (button[34]) {
+		if (button[35]) {
 			watt.dropBomb();
 		}
 		
@@ -200,13 +202,20 @@
             if (backgroundLoaded) {	
                 context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
             }
+			
 			document.getElementById("mongosKilled").innerHTML = enemiesKilled + "/" + totalEnemies;
 			document.getElementById("timeOnSoapBox").innerHTML = timer;
+			if (lastBomb != null && timer - lastBomb < 20) {
+				document.getElementById("cursorStatus").innerHTML = 'Full Table Scan (' + (CURSOR_COUNTDOWN - (timer - lastBomb)) + ' seconds remaining)';
+			}
+			else {
+				document.getElementById("cursorStatus").innerHTML = 'Available';
+			}			
         },
         drawGameOver: function() {
             context.fillStyle = 'black';
-            context.font = '30pt Calibri';
-            wrapText(context, "WEB SCALE COMPLETE!                                            Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him.", 200, 100, 800, 100);
+            context.font = '25pt Calibri';
+            wrapText(context, "Transaction (Process ID 'Watt') was deadlocked with another process and has been chosen as the deadlock victim. Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him. Webscale Complete!", 100, 100, canvasWidth - 100, 100);
         },
         clear: function () {
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -251,17 +260,17 @@
             currentShots.push(shot);
         },
         dropBomb: function() {
-            if (lastBomb == null || lastBomb - timer > 20) {
+            if (lastBomb == null || timer - lastBomb > CURSOR_COUNTDOWN) {
                 lastBomb = timer;
-            for(var x = -20; x <= 20; x = x + 5) {
-                for(var y = -20; y <= 20; y = y + 5) {
-                    currentBombs.push(createBomb(x,y));
-                }
-            }
-			enemiesKilled += currentEnemies.length;
-            currentEnemies = [];
-        }
-    }
+				for(var x = -20; x <= 20; x = x + 5) {
+					for(var y = -20; y <= 20; y = y + 5) {
+						currentBombs.push(createBomb(x,y));
+					}
+				}
+				enemiesKilled += currentEnemies.length;
+				currentEnemies = [];
+			}
+		}
     }
 
     function createBomb(movementX, movementY) {
@@ -278,7 +287,9 @@
                     currentBombs = [];
                     isBombActive = false;
                 }
-                context.fillText("SELECT * FROM AssWhooping", this.xPos, this.yPos);
+				context.fillStyle = 'white';
+                context.font = '16pt Calibri';
+                context.fillText("CURSOR", this.xPos, this.yPos);
                 this.xPos = this.movementX + this.xPos;
                 this.yPos = this.movementY + this.yPos;
             }
@@ -291,7 +302,7 @@
             health: 3,
             xPos: canvasWidth + 10,
             yPos: Math.floor((Math.random() * canvasHeight) + 1),
-            speed: Math.floor(Math.random() * (50 - 10 + 1)) + 10,
+            speed: Math.floor(Math.random() * (50 - 10 + 1)) + 10 + (Math.floor(timer)),
             draw: function () {
 				if (this.health == 3) {
 					if(mongoLoaded) {
@@ -353,8 +364,8 @@
         clearInterval(spawnEnemyInterval);
         clearInterval(timerInterval);
         setInterval(function () {
-        gameArea.clear();
-        gameArea.drawGameOver();
+			gameArea.clear();
+			gameArea.drawGameOver();
         }, 500)
     }
 
@@ -399,7 +410,8 @@
 </script>
 <div style="float:right">
 	<b>Controls</b>
-	<div>Arrow keys to move, Space to shoot, B to drop bombs</div>
+	<div>Arrow keys to move, Space to shoot, B to run cursors</div>
+	<div>Cursor Status: <span id='cursorStatus' style="font-weight:bold">Available</span></div>
 </div>	
 <div>
 	<b>Score</b>
