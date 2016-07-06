@@ -5,6 +5,9 @@
 </head>
 <body onload="startGame()">
 <script>
+	var SPEED_INCREMENT = 8;
+	var SPEED_DECREMENT = SPEED_INCREMENT / 2;
+	var MAX_SPEED = SPEED_INCREMENT * 3;
 
     var wattImage = new Image();
     var mongoImage = new Image();
@@ -19,7 +22,10 @@
 
     var canvasWidth = 1224;
     var canvasHeight = 768;
+	var wattWidth = 50;
 
+	var wattSpeedX = 0;
+	var wattSpeedY = 0;
     var wattLocationX = 10;
     var wattLocationY = this.canvas.height / 2;
 
@@ -58,16 +64,16 @@
             e = e || window.event;
             switch (e.which || e.keyCode) {
                 case 37: // left
-                    wattLocationX = wattLocationX - 10;
+					wattSpeedX = wattSpeedX - SPEED_INCREMENT;
                     break;
                 case 38: // up
-                    wattLocationY = wattLocationY - 10;
+					wattSpeedY = wattSpeedY - SPEED_INCREMENT;
                     break;
                 case 39: // right
-                    wattLocationX = wattLocationX + 10;
+					wattSpeedX = wattSpeedX + SPEED_INCREMENT;
                     break;
                 case 40: // down
-                    wattLocationY = wattLocationY  + 10;
+					wattSpeedY = wattSpeedY + SPEED_INCREMENT;
                     break;
                 case 32: //spacebar
                     watt.shoot();
@@ -75,6 +81,12 @@
                 default:
                     return; // exit this handler for other keys
             }
+			
+			//Cap the max speed
+			if (wattSpeedX > MAX_SPEED) { wattSpeedX = MAX_SPEED; }
+			if (wattSpeedX < -MAX_SPEED) { wattSpeedX = -MAX_SPEED; }
+			if (wattSpeedY > MAX_SPEED) { wattSpeedY = MAX_SPEED; }
+			if (wattSpeedY < -MAX_SPEED) { wattSpeedY = -MAX_SPEED; }
         }
     }
 
@@ -83,8 +95,33 @@
 
         gameArea.draw();
 
-        watt.draw();
+		//Move Watt
+		wattLocationX = wattLocationX + wattSpeedX;
+		wattLocationY = wattLocationY + wattSpeedY;
+		
+		if (wattLocationX < 0) { wattLocationX = 0;}
+		if (wattLocationX > canvasWidth - wattWidth) { wattLocationX = canvasWidth - wattWidth;}
+		if (wattLocationY < 0) { wattLocationY = 0;}
+		if (wattLocationY > canvasHeight - wattWidth) { wattLocationY = canvasHeight - wattWidth;}
+		
+		watt.draw();
 
+		//Slow Watt down
+		if (wattSpeedX > 0) {
+			wattSpeedX = wattSpeedX - SPEED_DECREMENT > 0 ? wattSpeedX - SPEED_DECREMENT : 0;
+		}
+		else if (wattSpeedX < 0) {
+			wattSpeedX = wattSpeedX + SPEED_DECREMENT < 0 ? wattSpeedX + SPEED_DECREMENT : 0;
+		}
+		if (wattSpeedY > 0) {
+			wattSpeedY = wattSpeedY - SPEED_DECREMENT > 0 ? wattSpeedY - SPEED_DECREMENT : 0;
+		}
+		else if (wattSpeedY < 0) {
+			wattSpeedY = wattSpeedY + SPEED_DECREMENT < 0 ? wattSpeedY + SPEED_DECREMENT : 0;
+		}
+		
+
+		
         for(var i = 0; i < this.currentShots.length; i++) {
             currentShots[i].draw();
         }
@@ -117,7 +154,7 @@
         img : document.createElement('IMG'),
         draw: function() {
             if(wattLoaded) {
-                context.drawImage(wattImage, wattLocationX, wattLocationY, 50, 50);
+                context.drawImage(wattImage, wattLocationX, wattLocationY, wattWidth, wattWidth);
             }
         },
         shoot: function() {
