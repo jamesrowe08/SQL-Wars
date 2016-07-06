@@ -29,6 +29,7 @@
 
     var currentEnemies = [];
     var currentShots = [];
+    var currentBombs = [];
 
     var drawInterval;
     var spawnEnemyInterval;
@@ -73,7 +74,8 @@
     function drawAllEntities() {
         gameArea.clear();
 
-                case 32: //spacebar
+		//TODO watt.dropBomb();
+        if (button[0]) {
 			watt.shoot();
 		}
 		if (button[5]) {
@@ -95,13 +97,13 @@
 		if (wattSpeedY > MAX_SPEED) { wattSpeedY = MAX_SPEED; }
 		if (wattSpeedY < -MAX_SPEED) { wattSpeedY = -MAX_SPEED; }
 		
-		wattLocationX = wattLocationX + wattSpeedX;
-		wattLocationY = wattLocationY + wattSpeedY;
+		watt.xPos = watt.xPos + wattSpeedX;
+		watt.yPos = watt.yPos + wattSpeedY;
 		
-		if (wattLocationX < 0) { wattLocationX = 0;}
-		if (wattLocationX > canvasWidth - wattWidth) { wattLocationX = canvasWidth - wattWidth;}
-		if (wattLocationY < 0) { wattLocationY = 0;}
-		if (wattLocationY > canvasHeight - wattWidth) { wattLocationY = canvasHeight - wattWidth;}
+		if (watt.xPos < 0) { watt.xPos = 0;}
+		if (watt.xPos > canvasWidth - wattWidth) { watt.xPos = canvasWidth - wattWidth;}
+		if (watt.yPos < 0) { watt.yPos = 0;}
+		if (watt.yPos > canvasHeight - wattWidth) { watt.yPos = canvasHeight - wattWidth;}
 		
 		watt.draw();
 
@@ -128,6 +130,10 @@
         for(var i =0; i < this.currentEnemies.length; i++) {
             currentEnemies[i].draw();
             currentEnemies[i].doMove();
+        }
+
+        for(var i = 0; i < this.currentBombs.length; i++) {
+            currentBombs[i].draw();
         }
     }
 
@@ -162,7 +168,8 @@
         xPos: 10,
         draw: function() {
             if(wattLoaded) {
-                context.drawImage(wattImage, wattLocationX, wattLocationY, 50, 50);            }
+                context.drawImage(wattImage, watt.xPos, watt.yPos, 50, 50);            
+			}
         },
         shoot: function() {
             var shot = {
@@ -190,6 +197,33 @@
                 }
             }
             currentShots.push(shot);
+        },
+        dropBomb: function() {
+            for(var x = -20; x <= 20; x = x + 5) {
+                for(var y = -20; y <= 20; y = y + 5) {
+                    currentBombs.push(createBomb(x,y));
+                }
+            }
+            currentEnemies = [];
+        }
+    }
+
+    function createBomb(movementX, movementY) {
+        return bomb = {
+            xPos: watt.xPos,
+            yPos: watt.yPos,
+            movementX: movementX,
+            movementY: movementY,
+            bombTime: timer,
+            draw: function() {
+                //Clear bomb from array
+                if(timer - this.bombTime > 5) {
+                    currentBombs = [];
+                }
+                context.fillText("SELECT * FROM AssWhooping", this.xPos, this.yPos);
+                this.xPos = this.movementX + this.xPos;
+                this.yPos = this.movementY + this.yPos;
+            }
         }
     }
 
