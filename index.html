@@ -158,7 +158,7 @@
             canvas.height = canvasHeight;
             canvas.style.position = "absolute";
             canvas.style.border = "1px solid";
-            if(backgroundLoaded) {
+            if(backgroundLoaded) {	
                 context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
             }
             context.fillStyle = 'white';
@@ -250,7 +250,7 @@
             yPos: Math.floor((Math.random() * canvasHeight) + 1),
             draw: function () {
                 if(mongoLoaded) {
-                    context.drawImage(mongoImage, this.xPos, this.yPos, 100, 100);
+                    context.drawImage(mongoImage, this.xPos, this.yPos, 45, 100);
                 }
             },
             doMove: function() {
@@ -299,7 +299,7 @@
     }
 
     function invertImageColors(xPos, yPos) {
-        var imageData = this.context.getImageData(xPos, yPos, 100, 100);
+        var imageData = this.context.getImageData(xPos, yPos, 45, 100);
         var data = imageData.data;
 
         for(var i = 0; i < data.length; i += 4) {
