@@ -11,17 +11,21 @@
 
     var wattImage = new Image();
     var mongoImage = new Image();
+	var mongoImage2 = new Image();
+	var mongoImage3 = new Image();
     var backgroundImage = new Image();
 
     var wattLoaded = false;
     var mongoLoaded = false;
+	var mongoLoaded2 = false;
+	var mongoLoaded3 = false;
     var backgroundLoaded = false;
 
     var canvas = document.createElement('canvas');
     var context;
 
-    var canvasWidth = 1224;
-    var canvasHeight = 768;
+    var canvasWidth = window.innerWidth - 25;
+    var canvasHeight = window.innerHeight - 75;
 	var wattWidth = 50;
 
     var currentShotId = 0;
@@ -37,8 +41,11 @@
 
 	var wattSpeedX = 0;
 	var wattSpeedY = 0;
+	var shootInterval = 0;
 	
     var timer = 0;
+	var enemiesKilled = 0;
+	var totalEnemies = 0;
 
     var lastBomb;
     var isBombActive = false;
@@ -64,12 +71,19 @@
         mongoImage.onload = function() {
             mongoLoaded = true;
         }
+		mongoImage2.src = "mongo2.png";
+        mongoImage2.onload = function() {
+            mongoLoaded2 = true;
+        }
+		mongoImage3.src = "mongo3.png";
+        mongoImage3.onload = function() {
+            mongoLoaded3 = true;
+        }
         backgroundImage.src = "sqlbackground.jpg";
         backgroundImage.onload = function() {
             backgroundLoaded = true;
         }
 
-        //keyBindings();
         drawInterval = setInterval(drawAllEntities, 50);
         spawnEnemyInterval = setInterval(spawnEnemiesIfNeeded, 500);
         timerInterval = setInterval(function() {
@@ -78,19 +92,22 @@
     }
 
     function drawAllEntities() {
-        gameArea.clear();
-		
+	
+        gameArea.clear();	
         gameArea.draw();
 
 		// Handle user input
-		// button[0] = fire           [space bar]
-		// button[5] = thrust left    [left arrow]
-		// button[7] = thrust right   [right arrow]
-		// button[6] = climb          [up arrow]
-		// button[8] = dive           [down arrow]
-		// button[34] = bomb          [b key]
+		// 	button[0] = fire           [space bar]
+		// 	button[5] = thrust left    [left arrow]
+		// 	button[7] = thrust right   [right arrow]
+		// 	button[6] = climb          [up arrow]
+		// 	button[8] = dive           [down arrow]
+		// 	button[34] = bomb          [b key]
         if (button[0]) {
-			watt.shoot();
+			if (shootInterval == 0) {
+				watt.shoot();
+				shootInterval = 3;
+			}
 		}
 		if (button[5]) {
 			wattSpeedX = wattSpeedX - SPEED_INCREMENT;
@@ -122,6 +139,7 @@
             wattSpeedY = -MAX_SPEED;
         }
 		
+		// Move Watt
 		watt.xPos = watt.xPos + wattSpeedX;
 		watt.yPos = watt.yPos + wattSpeedY;
 		
@@ -154,6 +172,10 @@
 			wattSpeedY = wattSpeedY + SPEED_DECREMENT < 0 ? wattSpeedY + SPEED_DECREMENT : 0;
 		}
 		
+		//Decrement the shoot interval
+		if (shootInterval > 0) {
+			shootInterval = shootInterval - 1;
+		}
 
         for(var i = 0; i < this.currentShots.length; i++) {
             currentShots[i].draw();
@@ -178,14 +200,13 @@
             if (backgroundLoaded) {	
                 context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
             }
-            context.fillStyle = 'white';
-            context.font = '20pt Calibri';
-            context.fillText("Time on the soapbox: " + timer, 20, 40);
+			document.getElementById("mongosKilled").innerHTML = enemiesKilled + "/" + totalEnemies;
+			document.getElementById("timeOnSoapBox").innerHTML = timer;
         },
         drawGameOver: function() {
             context.fillStyle = 'black';
             context.font = '30pt Calibri';
-            wrapText(context, "GAME OVER                                                         Watt fought as hard as he could, but alas: SQL Server was no more. MongoDB and it's endless features (Webscale to name one) conquered SQL Server in all it's glory.", 200, 100, 800, 100);
+            wrapText(context, "WEB SCALE COMPLETE!                                            Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him.", 200, 100, 800, 100);
         },
         clear: function () {
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -237,6 +258,7 @@
                     currentBombs.push(createBomb(x,y));
                 }
             }
+			enemiesKilled += currentEnemies.length;
             currentEnemies = [];
         }
     }
@@ -266,14 +288,26 @@
     function createMongoEnemy() {
         return mongoEnemy = {
             id: currentEnemyId++,
-            health: 100,
+            health: 3,
             xPos: canvasWidth + 10,
             yPos: Math.floor((Math.random() * canvasHeight) + 1),
             speed: Math.floor(Math.random() * (50 - 10 + 1)) + 10,
             draw: function () {
-                if(mongoLoaded) {
-                    context.drawImage(mongoImage, this.xPos, this.yPos, 45, 100);
-                }
+				if (this.health == 3) {
+					if(mongoLoaded) {
+						context.drawImage(mongoImage, this.xPos, this.yPos, 45, 100);
+					}
+				}
+				else if (this.health == 2) {
+					if(mongoLoaded2) {
+						context.drawImage(mongoImage2, this.xPos, this.yPos, 45, 100);
+					}
+				}
+				else {
+					if(mongoLoaded3) {
+						context.drawImage(mongoImage3, this.xPos, this.yPos, 45, 100);
+					}
+				}
             },
             doMove: function() {
                 if(this.xPos < 0) {
@@ -299,9 +333,10 @@
 
     function enemyHit(enemyIndex) {
         invertImageColors(currentEnemies[enemyIndex].xPos, currentEnemies[enemyIndex].yPos);
-        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - 25;
+        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - 1;
         if(currentEnemies[enemyIndex].health <= 0) {
             currentEnemies.splice(enemyIndex, 1);
+			enemiesKilled += 1;
         }
     }
 
@@ -309,6 +344,7 @@
         if (this.currentEnemies.length < 40 && !isBombActive) {
             var mongoEnemy = createMongoEnemy();
             this.currentEnemies.push(mongoEnemy);
+			totalEnemies += 1;
         }
     }
 
@@ -323,7 +359,8 @@
     }
 
     function invertImageColors(xPos, yPos) {
-        var imageData = this.context.getImageData(xPos, yPos, 45, 100);
+        /*
+		var imageData = this.context.getImageData(xPos, yPos, 45, 100);
         var data = imageData.data;
 
         for(var i = 0; i < data.length; i += 4) {
@@ -335,6 +372,7 @@
             data[i + 2] = 255 - data[i + 2];
         }
         this.context.putImageData(imageData, xPos, yPos);
+		*/
     }
 
     function wrapText(context, text, x, y, maxWidth, lineHeight) {
@@ -359,7 +397,15 @@
 
 
 </script>
-<p>Arrow keys to move, Space to shoot, B to drop bombs</p>
+<div style="float:right">
+	<b>Controls</b>
+	<div>Arrow keys to move, Space to shoot, B to drop bombs</div>
+</div>	
+<div>
+	<b>Score</b>
+	<div>Time on Soap Box: <span id='timeOnSoapBox' style="font-weight:bold">0</span><span style="font-weight:bold"> seconds</span></div>
+	<div>Mongo Instances Killed: <span id='mongosKilled' style="font-weight:bold">0/0</span></div>
+<div>
 </body>
 </html>
 
