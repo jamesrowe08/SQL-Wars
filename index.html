@@ -37,6 +37,15 @@
 
     var timer = 0;
 
+	var button = [0,0,0,0,0,0,0,0,0];					//Button map to keep track of which buttons are pressed
+	
+	onkeydown = function(k) {                           // key down state handler
+	  button[k.which - 32] = 1;                         // set key flag
+	},
+	onkeyup = function(k) {                             // key up state handler
+	  button[k.which - 32] = 0;                         // clear key flag
+	}
+	
     function startGame() {
         this.context = this.canvas.getContext("2d");
         document.body.appendChild(canvas);
@@ -54,44 +63,12 @@
             backgroundLoaded = true;
         }
 
-        keyBindings();
+        //keyBindings();
         setInterval(drawAllEntities, 50);
         setInterval(spawnEnemiesIfNeeded, 1000);
         setInterval(function() {
             timer++;
         }, 1000);
-    }
-
-
-    function keyBindings() {
-        document.onkeydown = function (e) {
-            e = e || window.event;
-            switch (e.which || e.keyCode) {
-                case 37: // left
-					wattSpeedX = wattSpeedX - SPEED_INCREMENT;
-                    break;
-                case 38: // up
-					wattSpeedY = wattSpeedY - SPEED_INCREMENT;
-                    break;
-                case 39: // right
-					wattSpeedX = wattSpeedX + SPEED_INCREMENT;
-                    break;
-                case 40: // down
-					wattSpeedY = wattSpeedY + SPEED_INCREMENT;
-                    break;
-                case 32: //spacebar
-                    watt.shoot();
-                    break;
-                default:
-                    return; // exit this handler for other keys
-            }
-			
-			//Cap the max speed
-			if (wattSpeedX > MAX_SPEED) { wattSpeedX = MAX_SPEED; }
-			if (wattSpeedX < -MAX_SPEED) { wattSpeedX = -MAX_SPEED; }
-			if (wattSpeedY > MAX_SPEED) { wattSpeedY = MAX_SPEED; }
-			if (wattSpeedY < -MAX_SPEED) { wattSpeedY = -MAX_SPEED; }
-        }
     }
 
     function drawAllEntities() {
@@ -100,6 +77,33 @@
         gameArea.draw();
 
 		//Move Watt
+		// button[0] = fire           [space bar]
+		// button[5] = thrust left    [left arrow]
+		// button[7] = thrust right   [right arrow]
+		// button[6] = climb          [up arrow]
+		// button[8] = dive           [down arrow]
+		if (button[0]) {
+			watt.shoot();
+		}
+		if (button[5]) {
+			wattSpeedX = wattSpeedX - SPEED_INCREMENT;
+		}
+		if (button[7]) {
+			wattSpeedX = wattSpeedX + SPEED_INCREMENT;
+		}
+		if (button[6]) {
+			wattSpeedY = wattSpeedY - SPEED_INCREMENT;
+		}
+		if (button[8]) {
+			wattSpeedY = wattSpeedY + SPEED_INCREMENT;
+		}
+		
+		//Cap the max speed
+		if (wattSpeedX > MAX_SPEED) { wattSpeedX = MAX_SPEED; }
+		if (wattSpeedX < -MAX_SPEED) { wattSpeedX = -MAX_SPEED; }
+		if (wattSpeedY > MAX_SPEED) { wattSpeedY = MAX_SPEED; }
+		if (wattSpeedY < -MAX_SPEED) { wattSpeedY = -MAX_SPEED; }
+		
 		wattLocationX = wattLocationX + wattSpeedX;
 		wattLocationY = wattLocationY + wattSpeedY;
 		
