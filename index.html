@@ -35,6 +35,8 @@
     var currentEnemies = [];
     var currentShots = [];
 
+    var timer = 0;
+
     function startGame() {
         this.context = this.canvas.getContext("2d");
         document.body.appendChild(canvas);
@@ -55,7 +57,9 @@
         keyBindings();
         setInterval(drawAllEntities, 50);
         setInterval(spawnEnemiesIfNeeded, 1000);
-        //setInterval(hitDetection, 2000);
+        setInterval(function() {
+            timer++;
+        }, 1000);
     }
 
 
@@ -136,12 +140,14 @@
         draw: function () {
             canvas.width = canvasWidth;
             canvas.height = canvasHeight;
-            canvas.style.zIndex = 8;
             canvas.style.position = "absolute";
             canvas.style.border = "1px solid";
             if(backgroundLoaded) {
                 context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
             }
+            context.fillStyle = 'white';
+            context.font = '20pt Calibri';
+            context.fillText("Time on the soapbox: " + timer, 20, 40);
         },
         clear: function () {
             context.clearRect(0, 0, canvas.width, canvas.height);
@@ -163,6 +169,8 @@
                 xPos : wattLocationX,
                 yPos : wattLocationY,
                 draw: function() {
+                    context.fillStyle = 'white';
+                    context.font = '12pt Calibri';
                     context.fillText("DACPAC", this.xPos, this.yPos);
                     this.xPos = this.xPos + 50;
                     if(this.xPos > canvasWidth) {
