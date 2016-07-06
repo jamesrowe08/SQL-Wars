@@ -35,16 +35,19 @@
     var spawnEnemyInterval;
     var timerInterval;
 
+	var wattSpeedX = 0;
+	var wattSpeedY = 0;
+	
     var timer = 0;
 
-	var button = [0,0,0,0,0,0,0,0,0];					//Button map to keep track of which buttons are pressed
+    var button = [];				//Button map to keep track of which buttons are pressed
 	
-	onkeydown = function(k) {                           // key down state handler
-	  button[k.which - 32] = 1;                         // set key flag
+    onkeydown = function(k) {                           // key down state handler
+        button[k.which - 32] = 1;                         // set key flag
 	},
-	onkeyup = function(k) {                             // key up state handler
-	  button[k.which - 32] = 0;                         // clear key flag
-	}
+    onkeyup = function(k) {                             // key up state handler
+        button[k.which - 32] = 0;                         // clear key flag
+    }
 	
     function startGame() {
         this.context = this.canvas.getContext("2d");
@@ -73,8 +76,18 @@
 
     function drawAllEntities() {
         gameArea.clear();
+		
+        gameArea.draw();
 
 		//TODO watt.dropBomb();
+		
+		// Handle user input
+		// button[0] = fire           [space bar]
+		// button[5] = thrust left    [left arrow]
+		// button[7] = thrust right   [right arrow]
+		// button[6] = climb          [up arrow]
+		// button[8] = dive           [down arrow]
+		// button[34] = bomb          [b key]
         if (button[0]) {
 			watt.shoot();
 		}
@@ -89,6 +102,9 @@
 		}
 		if (button[8]) {
 			wattSpeedY = wattSpeedY + SPEED_INCREMENT;
+		}
+		if (button[34]) {
+			watt.dropBomb();
 		}
 		
 		//Cap the max speed
@@ -122,7 +138,6 @@
 		}
 		
 
-		
         for(var i = 0; i < this.currentShots.length; i++) {
             currentShots[i].draw();
         }
@@ -168,7 +183,7 @@
         xPos: 10,
         draw: function() {
             if(wattLoaded) {
-                context.drawImage(wattImage, watt.xPos, watt.yPos, 50, 50);            
+                context.drawImage(wattImage, watt.xPos, watt.yPos, wattWidth, wattWidth);            
 			}
         },
         shoot: function() {
