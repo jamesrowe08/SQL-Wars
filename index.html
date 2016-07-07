@@ -238,7 +238,7 @@
 				document.getElementById("cursorStatus").innerHTML = 'Available';
 			}	
 			if (currentPowerup != null && currentPowerup.activated) {
-				document.getElementById("redgateStatus").innerHTML = 'SSF Enabled (' + (currentPowerup.endTime - timer) + ' seconds remaining)';
+				document.getElementById("redgateStatus").innerHTML = 'Trial License (' + (currentPowerup.endTime - timer) + ' seconds remaining)';
 			}
 			else {
 				document.getElementById("redgateStatus").innerHTML = 'License Expired';
@@ -247,14 +247,31 @@
         drawGameOver: function() {
             context.fillStyle = 'white';
             context.font = '25pt Calibri';
-            wrapText(context, "Transaction (Process ID 'Watt') was deadlocked with another process and has been chosen as the deadlock victim. Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him. Webscale Complete!", 100, 100, canvasWidth - 100, 100);
+            wrapText(context, "Transaction (Process ID 'Watt') was deadlocked with another process and has been chosen as the deadlock victim. Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him. Webscale Complete! Do you want to play again? Yes(y), No(n), Maybe(m)?", 100, 100, canvasWidth - 100, 100);
+			
+			window.addEventListener("keypress", function(e){
+				console.log(e.keyCode);
+				if(e.keyCode === 121) { //Y
+					location.reload();
+				}
+				else if(e.keyCode === 110) { //N
+					window.location.href = "http://www.mongodb.com";
+				}
+				else if(e.keyCode === 109) { //M
+					if (confirm("Make up your mind!")) {
+						location.reload();
+					}
+					else {
+						window.location.href = "http://www.mongodb.com";
+					}
+				}
+			});
         },
         clear: function () {
             context.clearRect(0, 0, canvas.width, canvas.height);
         }
 
     }
-
 
     var watt = {
         yPos: this.canvas.height / 2,
