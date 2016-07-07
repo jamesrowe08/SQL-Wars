@@ -9,6 +9,8 @@
 	var SPEED_DECREMENT = SPEED_INCREMENT / 2;
 	var MAX_SPEED = SPEED_INCREMENT * 3;
 	var CURSOR_COUNTDOWN = 20;
+	var LEAF_HEIGHT = 100;
+	var LEAF_WIDTH = 45;
 
     var wattImage = new Image();
     var mongoImage = new Image();
@@ -302,21 +304,22 @@
             health: 3,
             xPos: canvasWidth + 10,
             yPos: Math.floor((Math.random() * canvasHeight) + 1),
-            speed: Math.floor(Math.random() * (50 - 10 + 1)) + 10 + (Math.floor(timer)),
+            speed: Math.floor(Math.random() * (30 - 10 + 1)) + 10 + (Math.floor(timer)),
+			ySpeed: Math.floor(Math.random() * (20)) * (Math.floor(Math.random() * (2)) == 0 ? -1 : 1),
             draw: function () {
 				if (this.health == 3) {
 					if(mongoLoaded) {
-						context.drawImage(mongoImage, this.xPos, this.yPos, 45, 100);
+						context.drawImage(mongoImage, this.xPos, this.yPos, LEAF_WIDTH, LEAF_HEIGHT);
 					}
 				}
 				else if (this.health == 2) {
 					if(mongoLoaded2) {
-						context.drawImage(mongoImage2, this.xPos, this.yPos, 45, 100);
+						context.drawImage(mongoImage2, this.xPos, this.yPos, LEAF_WIDTH, LEAF_HEIGHT);
 					}
 				}
 				else {
 					if(mongoLoaded3) {
-						context.drawImage(mongoImage3, this.xPos, this.yPos, 45, 100);
+						context.drawImage(mongoImage3, this.xPos, this.yPos, LEAF_WIDTH, LEAF_HEIGHT);
 					}
 				}
             },
@@ -327,13 +330,23 @@
                         currentEnemies.splice(index, 1);
                     }
                 }
+				//Check if Watt was destroyed
                 if (this.xPos < watt.xPos + 50 &&
-                        this.xPos + 100 > watt.xPos &&
+                        this.xPos + LEAF_WIDTH > watt.xPos &&
                         this.yPos < watt.yPos + 50 &&
-                        100 + this.yPos > watt.yPos) {
+                        LEAF_HEIGHT + this.yPos > watt.yPos) {
                     gameOver();
                 }
                 this.xPos = this.xPos - this.speed;
+				this.yPos += this.ySpeed;
+				if (this.yPos < 0) {
+					this.yPos = 0;
+					this.ySpeed = -this.ySpeed;
+				}
+				else if (this.yPos > (canvasHeight - LEAF_HEIGHT)) {
+					this.yPos = canvasHeight - LEAF_HEIGHT;
+					this.ySpeed = -this.ySpeed;
+				}
             }
         }
     }
