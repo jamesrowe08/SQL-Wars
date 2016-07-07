@@ -3,7 +3,7 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 </head>
-<body onload="startGame()">
+<body onload="startGame()" style="background-color: #565e61; color: white;">
 <script>
 	var SPEED_INCREMENT = 8;
 	var SPEED_DECREMENT = SPEED_INCREMENT / 2;
@@ -11,24 +11,30 @@
 	var CURSOR_COUNTDOWN = 20;
 	var LEAF_HEIGHT = 100;
 	var LEAF_WIDTH = 45;
+	
+	var POWERUP_STRENGTH = 3;
 
     var wattImage = new Image();
     var mongoImage = new Image();
 	var mongoImage2 = new Image();
 	var mongoImage3 = new Image();
+	var redgateImage = new Image();
+	var redgateBulletImage = new Image();
     var backgroundImage = new Image();
 
     var wattLoaded = false;
     var mongoLoaded = false;
 	var mongoLoaded2 = false;
 	var mongoLoaded3 = false;
+	var redgateLoaded = false;
+	var redgateBulletLoaded = false;
     var backgroundLoaded = false;
 
     var canvas = document.createElement('canvas');
     var context;
 
     var canvasWidth = window.innerWidth - 25;
-    var canvasHeight = window.innerHeight - 75;
+    var canvasHeight = window.innerHeight - 100;
 	var wattWidth = 50;
 
     var currentShotId = 0;
@@ -37,9 +43,11 @@
     var currentEnemies = [];
     var currentShots = [];
     var currentBombs = [];
+	var currentPowerup = null;
 
     var drawInterval;
     var spawnEnemyInterval;
+	var spawnPowerupInterval;
     var timerInterval;
 
 	var wattSpeedX = 0;
@@ -86,9 +94,18 @@
         backgroundImage.onload = function() {
             backgroundLoaded = true;
         }
+		redgateImage.src = "redgate.png";
+        redgateImage.onload = function() {
+            redgateLoaded = true;
+        }
+		redgateBulletImage.src = "redgateBullet.png";
+        redgateBulletImage.onload = function() {
+            redgateBulletLoaded = true;
+        }
 
         drawInterval = setInterval(drawAllEntities, 50);
         spawnEnemyInterval = setInterval(spawnEnemiesIfNeeded, 500);
+		spawnPowerUpInterval = setInterval(spawnPowerUpIfNeeded, 1000);
         timerInterval = setInterval(function() {
             timer++;
         }, 1000);
@@ -181,6 +198,7 @@
 			shootInterval = shootInterval - 1;
 		}
 
+		//Draw everything
         for(var i = 0; i < this.currentShots.length; i++) {
             currentShots[i].draw();
         }
@@ -193,6 +211,11 @@
         for(var i = 0; i < this.currentBombs.length; i++) {
             currentBombs[i].draw();
         }
+		
+		if (currentPowerup != null) {
+			currentPowerup.draw();
+			currentPowerup.checkStatus();
+		}
     }
 
     var gameArea = {
@@ -206,16 +229,23 @@
             }
 			
 			document.getElementById("mongosKilled").innerHTML = enemiesKilled + "/" + totalEnemies;
+			document.getElementById("mongosKilledPercentage").innerHTML = totalEnemies > 0 ? ((enemiesKilled / totalEnemies).toFixed(2) + '%') : '0%';
 			document.getElementById("timeOnSoapBox").innerHTML = timer;
 			if (lastBomb != null && timer - lastBomb < 20) {
 				document.getElementById("cursorStatus").innerHTML = 'Full Table Scan (' + (CURSOR_COUNTDOWN - (timer - lastBomb)) + ' seconds remaining)';
 			}
 			else {
 				document.getElementById("cursorStatus").innerHTML = 'Available';
-			}			
+			}	
+			if (currentPowerup != null && currentPowerup.activated) {
+				document.getElementById("redgateStatus").innerHTML = 'SSF Enabled (' + (currentPowerup.endTime - timer) + ' seconds remaining)';
+			}
+			else {
+				document.getElementById("redgateStatus").innerHTML = 'License Expired';
+			}	
         },
         drawGameOver: function() {
-            context.fillStyle = 'black';
+            context.fillStyle = 'white';
             context.font = '25pt Calibri';
             wrapText(context, "Transaction (Process ID 'Watt') was deadlocked with another process and has been chosen as the deadlock victim. Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him. Webscale Complete!", 100, 100, canvasWidth - 100, 100);
         },
@@ -239,21 +269,30 @@
                 id: currentShotId++,
                 xPos : watt.xPos + (wattWidth / 2) + 10,
                 yPos : watt.yPos + (wattWidth / 2),
+				power : (currentPowerup != null && currentPowerup.activated) ? POWERUP_STRENGTH : 1 ,
+				height : (currentPowerup != null && currentPowerup.activated) ? 25 : 10,
                 draw: function() {
-                    context.fillStyle = 'white';
-                    context.font = '12pt Calibri';
-                    context.fillText("DACPAC", this.xPos, this.yPos);
+					if (this.power == POWERUP_STRENGTH)  {
+						if(redgateBulletLoaded) {
+							context.drawImage(redgateBulletImage, this.xPos, this.yPos, 32, 25);            
+						}
+					}
+					else {
+						context.fillStyle = 'white';
+						context.font = '12pt Calibri';
+						context.fillText("DACPAC", this.xPos, this.yPos);
+					}
                     this.xPos = this.xPos + 50;
                     if(this.xPos > canvasWidth) {
                         removeBullet(this);
                     }
 
                     for(var i =0; i < currentEnemies.length; i++) {
-                        if (currentEnemies[i].xPos < this.xPos + 10 &&
-                                currentEnemies[i].xPos + 100 > this.xPos &&
-                                currentEnemies[i].yPos < this.yPos + 10 &&
-                                100 + currentEnemies[i].yPos > this.yPos) {
-                             enemyHit(i);
+                        if (currentEnemies[i].xPos < this.xPos + this.height &&
+                                currentEnemies[i].xPos + LEAF_WIDTH > this.xPos &&
+                                currentEnemies[i].yPos < this.yPos + this.height &&
+                                LEAF_HEIGHT + currentEnemies[i].yPos > this.yPos) {
+                            enemyHit(i, this.power);
                             removeBullet(this);
                         }
                     }
@@ -331,9 +370,9 @@
                     }
                 }
 				//Check if Watt was destroyed
-                if (this.xPos < watt.xPos + 50 &&
+                if (this.xPos < watt.xPos + wattWidth &&
                         this.xPos + LEAF_WIDTH > watt.xPos &&
-                        this.yPos < watt.yPos + 50 &&
+                        this.yPos < watt.yPos + wattWidth &&
                         LEAF_HEIGHT + this.yPos > watt.yPos) {
                     gameOver();
                 }
@@ -351,13 +390,45 @@
         }
     }
 
+	function createPowerup() {
+        return powerUp = {
+            xPos: Math.floor((Math.random() * (canvasWidth-200)) + 100),
+            yPos: Math.floor((Math.random() * (canvasHeight-200)) + 100),
+			endTime: timer + 5,
+			visible: true,
+			activated: false,
+			draw: function () {
+				if(redgateLoaded && this.visible) {
+					context.drawImage(redgateImage, this.xPos, this.yPos, 140, 70);
+				}
+            },
+			checkStatus: function() {
+				if (this.visible &&
+						this.xPos < watt.xPos + wattWidth &&
+                        this.xPos + 140 > watt.xPos &&
+                        this.yPos < watt.yPos + wattWidth &&
+                        70 + this.yPos > watt.yPos) {
+                    this.visible = false;
+					this.activated = true;
+					this.endTime = timer + 5;
+                }
+				else {
+					if (this.endTime <= timer) {
+						currentPowerup = null;
+						console.log('powerup expired - ' + timer);
+					}
+				}
+			}
+		}
+	}
+	
     function removeBullet(currentShot) {
         currentShots.splice(currentShots.indexOf(currentShot), 1);
     }
 
-    function enemyHit(enemyIndex) {
+    function enemyHit(enemyIndex, shotPower) {
         invertImageColors(currentEnemies[enemyIndex].xPos, currentEnemies[enemyIndex].yPos);
-        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - 1;
+        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - shotPower;
         if(currentEnemies[enemyIndex].health <= 0) {
             currentEnemies.splice(enemyIndex, 1);
 			enemiesKilled += 1;
@@ -370,6 +441,14 @@
             this.currentEnemies.push(mongoEnemy);
 			totalEnemies += 1;
         }
+    }
+	
+	function spawnPowerUpIfNeeded() {
+		if (currentPowerup == null) {
+			if (Math.floor(Math.random() * 6) == 1) { //1 in 6 chance to generate a power up
+				currentPowerup = createPowerup();
+			}
+		}
     }
 
     function gameOver() {
@@ -421,16 +500,23 @@
 
 
 </script>
-<div style="float:right">
-	<b>Controls</b>
-	<div>Arrow keys to move, Space to shoot, C to run a cursor</div>
-	<div>Cursor Status: <span id='cursorStatus' style="font-weight:bold">Available</span></div>
-</div>	
-<div>
-	<b>Score</b>
-	<div>Time on Soap Box: <span id='timeOnSoapBox' style="font-weight:bold">0</span><span style="font-weight:bold"> seconds</span></div>
-	<div>Mongo Instances Killed: <span id='mongosKilled' style="font-weight:bold">0/0</span></div>
-<div>
+<div style="height:80px">
+	<div style="float: left; width: 33%;">
+		<b>Score</b>
+		<div>Time on Soap Box: <span id='timeOnSoapBox' style="font-weight:bold">0</span><span style="font-weight:bold"> seconds</span></div>
+		<div>Mongo Instances Killed: <span id='mongosKilled' style="font-weight:bold">0/0</span></div>
+		<div>Mongo Kill %: <span id='mongosKilledPercentage' style="font-weight:bold">0%</span></div>
+	</div>
+	<div style="display: inline-block; width: 33%;">
+		<div style='font-size:40px;'>SQL DEFENDER</div>
+	</div>
+	<div style="float: right; width: 33%;">
+		<b>Controls</b>
+		<div>Arrow keys to move, Space to shoot, C to run a cursor</div>
+		<div>Cursor Status: <span id='cursorStatus' style="font-weight:bold">Available</span></div>
+		<div>Redgate Status: <span id='redgateStatus' style="font-weight:bold">License Expired</span></div>
+	</div>	
+</div>
 </body>
 </html>
 
