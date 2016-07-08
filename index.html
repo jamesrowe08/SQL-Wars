@@ -95,7 +95,7 @@ $( document ).ready(function() {
 		display: block;
 		font-size: 120px;
 		width: 500px;
-		height: 100px;
+		height: 150px;
 		position: absolute;
 		top: 0;
 		bottom: 0;
@@ -128,8 +128,12 @@ $( document ).ready(function() {
 	</div>
 	
 	<div>
-		SQL Wars - Click anywhere to play
+		Click anywhere to play
 	</div>
+	
+	<audio onloadeddata="var audioPlayer = this; setTimeout(function() { audioPlayer.play(); }, 6000)">
+	  <source src="https://ia601703.us.archive.org/15/items/StarWarsThemeSongByJohnWilliams/Star%20Wars%20Theme%20Song%20By%20John%20Williams.mp3" type="audio/mpeg">
+	</audio>
 </body>
 </html>
 
