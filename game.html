@@ -250,7 +250,7 @@
             }
 			
 			document.getElementById("mongosKilled").innerHTML = enemiesKilled + "/" + totalEnemies;
-			document.getElementById("mongosKilledPercentage").innerHTML = totalEnemies > 0 ? ((enemiesKilled / totalEnemies).toFixed(2) + '%') : '0%';
+			document.getElementById("mongosKilledPercentage").innerHTML = totalEnemies > 0 ? (((enemiesKilled / totalEnemies).toFixed(2) * 100) + '%') : '0%';
 			document.getElementById("timeOnSoapBox").innerHTML = timer;
 			if (lastBomb != null && timer - lastBomb < 20) {
 				document.getElementById("cursorStatus").innerHTML = 'Full Table Scan (' + (CURSOR_COUNTDOWN - (timer - lastBomb)) + ' seconds remaining)';
@@ -618,8 +618,8 @@
 	<div style="float: left; width: 33%;">
 		<b>Score</b>
 		<div>Time on Soap Box: <span id='timeOnSoapBox' style="font-weight:bold">0</span><span style="font-weight:bold"> seconds</span></div>
-		<div>Mongo Instances Killed: <span id='mongosKilled' style="font-weight:bold">0/0</span></div>
-		<div>Mongo Kill %: <span id='mongosKilledPercentage' style="font-weight:bold">0%</span></div>
+		<div>MongoDB Instances Killed: <span id='mongosKilled' style="font-weight:bold">0/0</span></div>
+		<div>MongoDB Kill Rate: <span id='mongosKilledPercentage' style="font-weight:bold">0%</span></div>
 	</div>
 	<div style="display: inline-block; width: 33%;">
 		<div style='font-size:40px;'>SQL WARS</div>
