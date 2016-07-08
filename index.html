@@ -49,6 +49,7 @@
     var currentEnemies = [];
     var currentShots = [];
     var currentBombs = [];
+    var currentBossShots = [];
 	var currentPowerup = null;
 
     var drawInterval;
@@ -231,6 +232,10 @@
 
         for(var i = 0; i < this.currentBombs.length; i++) {
             currentBombs[i].draw();
+        }
+
+        for(var i = 0; i < this.currentBossShots.length; i++) {
+            currentBossShots[i].draw();
         }
 		
 		if (currentPowerup != null) {
@@ -459,22 +464,22 @@
             },
             doMove: function() {
 			//Shotgun like burst towards player
-                if(currentShots.length < 20) {
-                    currentShots.push(createBirstShot(this.xPos, this.yPos + 50));
-                    currentShots.push(createBirstShot(this.xPos, this.yPos));
-                    currentShots.push(createBirstShot(this.xPos, this.yPos - 50));
+                if(currentBossShots.length < 20) {
+                    currentBossShots.push(createBirstShot(this.xPos, this.yPos, 50));
+                    currentBossShots.push(createBirstShot(this.xPos, this.yPos, 0));
+                    currentBossShots.push(createBirstShot(this.xPos, this.yPos, -50));
                 }
 
             }
         }
     }
 
-    function createBirstShot (currentX, currentY) {
+    function createBirstShot (currentX, currentY, offsetY) {
         //Shoot towards player
         var shot = {
             id: currentShotId++,
             xPos: currentX,
-            yPos: currentY,
+            yPos: currentY + offsetY,
             width: 50,
             height: 50,
             timeFired: timer,
@@ -489,7 +494,7 @@
                    gameOver();
                 }
                 if(this.xPos > canvasWidth || this.xPos < 0 || this.yPos > canvasHeight || this.yPos < 0) {
-                    removeBullet(this);
+                    removeBossBullet(this);
                 }
                 this.xPos = this.xPos + this.speedX;
                 this.yPos = this.yPos + this.speedY;
@@ -497,7 +502,7 @@
         }
         shot.lengthPath = Math.sqrt((watt.xPos - shot.xPos)*(watt.xPos - shot.xPos) + (watt.yPos - shot.yPos)*(watt.yPos - shot.yPos));
         shot.speedX = (watt.xPos - shot.xPos) / shot.lengthPath * 50;
-        shot.speedY = (watt.yPos - shot.yPos) /shot.lengthPath * 50;
+        shot.speedY = ((watt.yPos + offsetY) - shot.yPos) /shot.lengthPath * 50;
         return shot;
     }
 
@@ -537,6 +542,10 @@
         currentShots.splice(currentShots.indexOf(currentShot), 1);
     }
 
+    function removeBossBullet(currentShot) {
+        currentBossShots.splice(currentBossShots.indexOf(currentShot), 1);
+    }
+
     function enemyHit(enemyIndex, shotPower) {
         if(bossSpawned && !bossKilled) {
             currentEnemies[enemyIndex].hit = true;
@@ -553,7 +562,7 @@
     }
 
  function spawnEnemiesIfNeeded() {
-        if (this.currentEnemies.length < 40 && !isBombActive && (timer < 1 || bossKilled)) {
+        if (this.currentEnemies.length < 40 && !isBombActive && (timer < 30 || bossKilled)) {
             var mongoEnemy = createMongoEnemy();
             this.currentEnemies.push(mongoEnemy);
 			totalEnemies += 1;
