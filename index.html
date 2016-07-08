@@ -2,644 +2,135 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-</head>
-<body onload="startGame()" style="background-color: #565e61; color: white;">
+<style>
+#titles
+{
+	position: absolute;
+	width: 18em;
+	height: 50em;
+	bottom: 0;
+	left: 50%;
+	margin-left: -9em;
+	font-size: 60px;
+	font-weight: bold;
+	text-align: justify;
+	overflow: hidden;
+	transform-origin: 50% 100%;
+	transform: perspective(300px) rotateX(13deg);
+}
+
+#titles:after
+{
+	position: absolute;
+	content: ' ';
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 60%;
+	background-image: linear-gradient(top, rgba(0,0,0,1) 0%, transparent 100%);
+	pointer-events: none;
+}
+
+#titlecontent
+{
+	position: absolute;
+	top: 100%;
+	animation: scroll 100s linear 3s infinite;
+}
+
+@keyframes scroll {
+	0% { top: 100%; }
+	100% { top: -170%; }
+}
+</style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script>
-	var SPEED_INCREMENT = 8;
-	var SPEED_DECREMENT = SPEED_INCREMENT / 2;
-	var MAX_SPEED = SPEED_INCREMENT * 3;
-	var CURSOR_COUNTDOWN = 20;
-	var LEAF_HEIGHT = 100;
-	var LEAF_WIDTH = 45;
+
+window.addEventListener("click", function(e){
+	window.location.href = "game.html";
+});
 	
-	var POWERUP_STRENGTH = 3;
+$( document ).ready(function() {
 
-    var wattImage = new Image();
-    var mongoImage = new Image();
-	var mongoImage2 = new Image();
-	var mongoImage3 = new Image();
-	var redgateImage = new Image();
-	var redgateBulletImage = new Image();
-    var backgroundImage = new Image();
-	var birstImage = new Image();
-    var birstLogoImage = new Image();
-    var birstHitImage = new Image();
-
-    var wattLoaded = false;
-    var mongoLoaded = false;
-	var mongoLoaded2 = false;
-	var mongoLoaded3 = false;
-	var redgateLoaded = false;
-	var redgateBulletLoaded = false;
-    var backgroundLoaded = false;
-	var birstLoaded = false;
-    var birstLogoLoaded = false;
-    var birstHitLoaded = false;
-
-    var canvas = document.createElement('canvas');
-    var context;
-
-    var canvasWidth = window.innerWidth - 25;
-    var canvasHeight = window.innerHeight - 100;
-	var wattWidth = 50;
-
-    var currentShotId = 0;
-    var currentEnemyId = 0;
-
-    var currentEnemies = [];
-    var currentShots = [];
-    var currentBombs = [];
-    var currentBossShots = [];
-	var currentPowerup = null;
-
-    var drawInterval;
-    var spawnEnemyInterval;
-	var spawnPowerupInterval;
-    var timerInterval;
-
-	var wattSpeedX = 0;
-	var wattSpeedY = 0;
-	var shootInterval = 0;
+	$('#step2').hide();
+	$('#titles').hide();
 	
-    var timer = 0;
-	var enemiesKilled = 0;
-	var totalEnemies = 0;
-
-    var lastBomb;
-    var isBombActive = false;
+	setTimeout(function(){
+		$('#step1').fadeOut(3000);
+	}, 3000);
 	
-	var bossKilled = false;
-    var bossSpawned = false;
-
-    var button = [];				//Button map to keep track of which buttons are pressed
+	setTimeout(function(){
+		$('#step2').fadeIn(3000);
+	}, 6000);
 	
-    onkeydown = function(k) {                           // key down state handler
-        button[k.which - 32] = 1;                         // set key flag
-	},
-    onkeyup = function(k) {                             // key up state handler
-        button[k.which - 32] = 0;                         // clear key flag
-    }
+	setTimeout(function(){
+		$('#step2').fadeOut(3000);
+	}, 10000);
 	
-    function startGame() {
-        this.context = this.canvas.getContext("2d");
-        document.body.appendChild(canvas);
-
-        wattImage.src = "watt.jpg";
-        wattImage.onload = function () {
-            wattLoaded = true;
-        }
-        mongoImage.src = "mongo.png";
-        mongoImage.onload = function() {
-            mongoLoaded = true;
-        }
-		mongoImage2.src = "mongo2.png";
-        mongoImage2.onload = function() {
-            mongoLoaded2 = true;
-        }
-		mongoImage3.src = "mongo3.png";
-        mongoImage3.onload = function() {
-            mongoLoaded3 = true;
-        }
-        backgroundImage.src = "sqlbackground.jpg";
-        backgroundImage.onload = function() {
-            backgroundLoaded = true;
-        }
-		redgateImage.src = "redgate.png";
-        redgateImage.onload = function() {
-            redgateLoaded = true;
-        }
-		redgateBulletImage.src = "redgateBullet.png";
-        redgateBulletImage.onload = function() {
-            redgateBulletLoaded = true;
-        }
-		birstImage.src = "birst.jpg";
-        birstImage.onload = function() {
-            birstLoaded = true;
-        }
-        birstLogoImage.src = "birstLogo.png";
-        birstLogoImage.onload = function() {
-            birstLogoLoaded = true;
-        }
-        birstHitImage.src = "birstHit.jpg";
-        birstHitImage.onload = function() {
-            birstHitLoaded = true;
-        }
-
-        drawInterval = setInterval(drawAllEntities, 50);
-        spawnEnemyInterval = setInterval(spawnEnemiesIfNeeded, 500);
-		spawnPowerUpInterval = setInterval(spawnPowerUpIfNeeded, 1000);
-        timerInterval = setInterval(function() {
-            timer++;
-        }, 1000);
-	
-    }
-
-    function drawAllEntities() {
-	
-        gameArea.clear();	
-        gameArea.draw();
-
-		// Handle user input
-		// 	button[0] = fire           [space bar]
-		// 	button[5] = thrust left    [left arrow]
-		// 	button[7] = thrust right   [right arrow]
-		// 	button[6] = climb          [up arrow]
-		// 	button[8] = dive           [down arrow]
-		// 	button[35] = cursor        [c key]
-        if (button[0]) {
-			if (shootInterval == 0) {
-				watt.shoot();
-				shootInterval = 3;
-			}
-		}
-		if (button[5]) {
-			wattSpeedX = wattSpeedX - SPEED_INCREMENT;
-		}
-		if (button[7]) {
-			wattSpeedX = wattSpeedX + SPEED_INCREMENT;
-		}
-		if (button[6]) {
-			wattSpeedY = wattSpeedY - SPEED_INCREMENT;
-		}
-		if (button[8]) {
-			wattSpeedY = wattSpeedY + SPEED_INCREMENT;
-		}
-		if (button[35]) {
-			watt.dropBomb();
-		}
-		
-		//Cap the max speed
-        if (wattSpeedX > MAX_SPEED) {
-            wattSpeedX = MAX_SPEED;
-        }
-        if (wattSpeedX < -MAX_SPEED) {
-            wattSpeedX = -MAX_SPEED;
-        }
-        if (wattSpeedY > MAX_SPEED) {
-            wattSpeedY = MAX_SPEED;
-        }
-        if (wattSpeedY < -MAX_SPEED) {
-            wattSpeedY = -MAX_SPEED;
-        }
-		
-		// Move Watt
-		watt.xPos = watt.xPos + wattSpeedX;
-		watt.yPos = watt.yPos + wattSpeedY;
-		
-        if (watt.xPos < 0) {
-            watt.xPos = 0;
-        }
-        if (watt.xPos > canvasWidth - wattWidth) {
-            watt.xPos = canvasWidth - wattWidth;
-        }
-        if (watt.yPos < 0) {
-            watt.yPos = 0;
-        }
-        if (watt.yPos > canvasHeight - wattWidth) {
-            watt.yPos = canvasHeight - wattWidth;
-        }
-		
-		watt.draw();
-
-		//Slow Watt down
-		if (wattSpeedX > 0) {
-			wattSpeedX = wattSpeedX - SPEED_DECREMENT > 0 ? wattSpeedX - SPEED_DECREMENT : 0;
-		}
-		else if (wattSpeedX < 0) {
-			wattSpeedX = wattSpeedX + SPEED_DECREMENT < 0 ? wattSpeedX + SPEED_DECREMENT : 0;
-		}
-		if (wattSpeedY > 0) {
-			wattSpeedY = wattSpeedY - SPEED_DECREMENT > 0 ? wattSpeedY - SPEED_DECREMENT : 0;
-		}
-		else if (wattSpeedY < 0) {
-			wattSpeedY = wattSpeedY + SPEED_DECREMENT < 0 ? wattSpeedY + SPEED_DECREMENT : 0;
-		}
-		
-		//Decrement the shoot interval
-		if (shootInterval > 0) {
-			shootInterval = shootInterval - 1;
-		}
-
-		//Draw everything
-        for(var i = 0; i < this.currentShots.length; i++) {
-            currentShots[i].draw();
-        }
-
-        for(var i =0; i < this.currentEnemies.length; i++) {
-            currentEnemies[i].draw();
-            currentEnemies[i].doMove();
-        }
-
-        for(var i = 0; i < this.currentBombs.length; i++) {
-            currentBombs[i].draw();
-        }
-
-        for(var i = 0; i < this.currentBossShots.length; i++) {
-            currentBossShots[i].draw();
-        }
-		
-		if (currentPowerup != null) {
-			currentPowerup.draw();
-			currentPowerup.checkStatus();
-		}
-    }
-
-    var gameArea = {
-        draw: function () {
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-            canvas.style.position = "absolute";
-            canvas.style.border = "1px solid";
-            if (backgroundLoaded) {	
-                context.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
-            }
-			
-			document.getElementById("mongosKilled").innerHTML = enemiesKilled + "/" + totalEnemies;
-			document.getElementById("mongosKilledPercentage").innerHTML = totalEnemies > 0 ? ((enemiesKilled / totalEnemies).toFixed(2) + '%') : '0%';
-			document.getElementById("timeOnSoapBox").innerHTML = timer;
-			if (lastBomb != null && timer - lastBomb < 20) {
-				document.getElementById("cursorStatus").innerHTML = 'Full Table Scan (' + (CURSOR_COUNTDOWN - (timer - lastBomb)) + ' seconds remaining)';
-			}
-			else {
-				document.getElementById("cursorStatus").innerHTML = 'Available';
-			}	
-			if (currentPowerup != null && currentPowerup.activated) {
-				document.getElementById("redgateStatus").innerHTML = 'Trial License (' + (currentPowerup.endTime - timer) + ' seconds remaining)';
-			}
-			else {
-				document.getElementById("redgateStatus").innerHTML = 'License Expired';
-			}	
-        },
-        drawGameOver: function() {
-            context.fillStyle = 'white';
-            context.font = '25pt Calibri';
-            wrapText(context, "Transaction (Process ID 'Watt') was deadlocked with another process and has been chosen as the deadlock victim. Watt fought valiantly, but alas - he could only protect SQL Server for " + timer + " seconds. He was able to fight off " + enemiesKilled + " MongoDB instances but it's neverending list of features and infinite scalability eventually overwhelmed him. Webscale Complete! Do you want to play again? Yes(y), No(n), Maybe(m)?", 100, 100, canvasWidth - 100, 100);
-			
-			window.addEventListener("keypress", function(e){
-				console.log(e.keyCode);
-				if(e.keyCode === 121) { //Y
-					location.reload();
-				}
-				else if(e.keyCode === 110) { //N
-					window.location.href = "http://www.mongodb.com";
-				}
-				else if(e.keyCode === 109) { //M
-					window.location.href = "http://yesnomaybe.info/?question=Should%20we%20switch%20to%20MongoDB?";
-				}
-			});
-        },
-        clear: function () {
-            context.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-    }
-
-    var watt = {
-        yPos: this.canvas.height / 2,
-        xPos: 10,
-        draw: function() {
-            if(wattLoaded) {
-                context.drawImage(wattImage, watt.xPos, watt.yPos, wattWidth, wattWidth);            
-			}
-        },
-        shoot: function() {
-            var shot = {
-                id: currentShotId++,
-                xPos : watt.xPos + (wattWidth / 2) + 10,
-                yPos : watt.yPos + (wattWidth / 2),
-				power : (currentPowerup != null && currentPowerup.activated) ? POWERUP_STRENGTH : 1 ,
-				height : (currentPowerup != null && currentPowerup.activated) ? 25 : 10,
-                draw: function() {
-					if (this.power == POWERUP_STRENGTH)  {
-						if(redgateBulletLoaded) {
-							context.drawImage(redgateBulletImage, this.xPos, this.yPos, 32, 25);            
-						}
-					}
-					else {
-						context.fillStyle = 'white';
-						context.font = '12pt Calibri';
-						context.fillText("DACPAC", this.xPos, this.yPos);
-					}
-                    this.xPos = this.xPos + 50;
-                    if(this.xPos > canvasWidth) {
-                        removeBullet(this);
-                    }
-
-                    for(var i =0; i < currentEnemies.length; i++) {
-                        if (currentEnemies[i].xPos < this.xPos + this.height &&
-                                currentEnemies[i].xPos + LEAF_WIDTH > this.xPos &&
-                                currentEnemies[i].yPos < this.yPos + this.height &&
-                                LEAF_HEIGHT + currentEnemies[i].yPos > this.yPos) {
-                            enemyHit(i, this.power);
-                            removeBullet(this);
-                        }
-                    }
-                }
-            }
-            currentShots.push(shot);
-        },
-        dropBomb: function() {
-            if (lastBomb == null || timer - lastBomb > CURSOR_COUNTDOWN) {
-                lastBomb = timer;
-				for(var x = -20; x <= 20; x = x + 5) {
-					for(var y = -20; y <= 20; y = y + 5) {
-						currentBombs.push(createBomb(x,y));
-					}
-				}
-				enemiesKilled += currentEnemies.length;
-				currentEnemies = [];
-			}
-		}
-    }
-
-    function createBomb(movementX, movementY) {
-        return bomb = {
-            xPos: watt.xPos,
-            yPos: watt.yPos,
-            movementX: movementX,
-            movementY: movementY,
-            bombTime: timer,
-            draw: function() {
-                isBombActive = true;
-                //Clear bomb from array
-                if(timer - this.bombTime > 5) {
-                    currentBombs = [];
-                    isBombActive = false;
-                }
-				context.fillStyle = 'white';
-                context.font = '16pt Calibri';
-                context.fillText("CURSOR", this.xPos, this.yPos);
-                this.xPos = this.movementX + this.xPos;
-                this.yPos = this.movementY + this.yPos;
-            }
-        }
-    }
-
-    function createMongoEnemy() {
-        return mongoEnemy = {
-            id: currentEnemyId++,
-            health: 3,
-            xPos: canvasWidth + 10,
-            yPos: Math.floor((Math.random() * canvasHeight) + 1),
-            speed: Math.floor(Math.random() * (30 - 10 + 1)) + 10 + (Math.floor(timer)),
-			ySpeed: Math.floor(Math.random() * (20)) * (Math.floor(Math.random() * (2)) == 0 ? -1 : 1),
-            draw: function () {
-				if (this.health == 3) {
-					if(mongoLoaded) {
-						context.drawImage(mongoImage, this.xPos, this.yPos, LEAF_WIDTH, LEAF_HEIGHT);
-					}
-				}
-				else if (this.health == 2) {
-					if(mongoLoaded2) {
-						context.drawImage(mongoImage2, this.xPos, this.yPos, LEAF_WIDTH, LEAF_HEIGHT);
-					}
-				}
-				else {
-					if(mongoLoaded3) {
-						context.drawImage(mongoImage3, this.xPos, this.yPos, LEAF_WIDTH, LEAF_HEIGHT);
-					}
-				}
-            },
-            doMove: function() {
-                if(this.xPos < 0) {
-                    var index = currentEnemies.indexOf(this);
-                    if(index != -1) {
-                        currentEnemies.splice(index, 1);
-                    }
-                }
-				//Check if Watt was destroyed
-                if (this.xPos < watt.xPos + wattWidth &&
-                        this.xPos + LEAF_WIDTH > watt.xPos &&
-                        this.yPos < watt.yPos + wattWidth &&
-                        LEAF_HEIGHT + this.yPos > watt.yPos) {
-                    gameOver();
-                }
-                this.xPos = this.xPos - this.speed;
-				this.yPos += this.ySpeed;
-				if (this.yPos < 0) {
-					this.yPos = 0;
-					this.ySpeed = -this.ySpeed;
-				}
-				else if (this.yPos > (canvasHeight - LEAF_HEIGHT)) {
-					this.yPos = canvasHeight - LEAF_HEIGHT;
-					this.ySpeed = -this.ySpeed;
-				}
-            }
-        }
-    }
-	
-	   function createBirstBoss() {
-        return birstBoss = {
-            id: currentEnemyId++,
-            health: 20,
-            xPos: canvasWidth - 300,
-            yPos: 100,
-            height: 200,
-            width: 300,
-            lastBomb: null,
-            moveDown: true,
-            moveUp: false,
-            draw: function() {
-                if(this.hit && birstHitLoaded) {
-                    context.drawImage(birstHitImage, this.xPos, this.yPos, this.width, this.height);
-                    this.hit = false;
-                } else if(birstLoaded) {
-                    context.drawImage(birstImage, this.xPos, this.yPos, this.width, this.height);
-                }
-                if(isHit(this.xPos, this.yPos, this.width, this.height, watt.xPos, watt.yPos, wattWidth, wattWidth)) {
-                    gameOver();
-                }
-
-                if(this.yPos + this.height > canvasHeight && !this.moveUp) {
-                    this.moveDown = false;
-                    this.moveUp = true;
-                } else if(this.yPos < 0 && !this.moveDown) {
-                    this.moveDown = true;
-                    this.moveUp = false;
-                } else if(this.moveDown == true) {
-                    this.yPos = this.yPos + 20;
-                } else  if(this.moveUp == true) {
-                    this.yPos = this.yPos - 20;
-                }
-            },
-            doMove: function() {
-			//Shotgun like burst towards player
-                if(currentBossShots.length < 20) {
-                    currentBossShots.push(createBirstShot(this.xPos, this.yPos, 50));
-                    currentBossShots.push(createBirstShot(this.xPos, this.yPos, 0));
-                    currentBossShots.push(createBirstShot(this.xPos, this.yPos, -50));
-                }
-
-            }
-        }
-    }
-
-    function createBirstShot (currentX, currentY, offsetY) {
-        //Shoot towards player
-        var shot = {
-            id: currentShotId++,
-            xPos: currentX,
-            yPos: currentY + offsetY,
-            width: 50,
-            height: 50,
-            timeFired: timer,
-            lengthPath: null,
-            speedX: null,
-            speedY: null,
-            draw: function () {
-                if(birstLogoLoaded) {
-                    context.drawImage(birstLogoImage, this.xPos, this.yPos, this.width, this.height);
-                }
-                if(isHit(this.xPos, this.yPos, this.width, this.height, watt.xPos, watt.yPos, wattWidth, wattWidth)) {
-                   gameOver();
-                }
-                if(this.xPos > canvasWidth || this.xPos < 0 || this.yPos > canvasHeight || this.yPos < 0) {
-                    removeBossBullet(this);
-                }
-                this.xPos = this.xPos + this.speedX;
-                this.yPos = this.yPos + this.speedY;
-            }
-        }
-        shot.lengthPath = Math.sqrt((watt.xPos - shot.xPos)*(watt.xPos - shot.xPos) + (watt.yPos - shot.yPos)*(watt.yPos - shot.yPos));
-        shot.speedX = (watt.xPos - shot.xPos) / shot.lengthPath * 50;
-        shot.speedY = ((watt.yPos + offsetY) - shot.yPos) /shot.lengthPath * 50;
-        return shot;
-    }
-
-	function createPowerup() {
-        return powerUp = {
-            xPos: Math.floor((Math.random() * (canvasWidth-200)) + 100),
-            yPos: Math.floor((Math.random() * (canvasHeight-200)) + 100),
-			endTime: timer + 5,
-			visible: true,
-			activated: false,
-			draw: function () {
-				if(redgateLoaded && this.visible) {
-					context.drawImage(redgateImage, this.xPos, this.yPos, 140, 70);
-				}
-            },
-			checkStatus: function() {
-				if (this.visible &&
-						this.xPos < watt.xPos + wattWidth &&
-                        this.xPos + 140 > watt.xPos &&
-                        this.yPos < watt.yPos + wattWidth &&
-                        70 + this.yPos > watt.yPos) {
-                    this.visible = false;
-					this.activated = true;
-					this.endTime = timer + 5;
-                }
-				else {
-					if (this.endTime <= timer) {
-						currentPowerup = null;
-						console.log('powerup expired - ' + timer);
-					}
-				}
-			}
-		}
-	}
-	
-    function removeBullet(currentShot) {
-        currentShots.splice(currentShots.indexOf(currentShot), 1);
-    }
-
-    function removeBossBullet(currentShot) {
-        currentBossShots.splice(currentBossShots.indexOf(currentShot), 1);
-    }
-
-    function enemyHit(enemyIndex, shotPower) {
-        if(bossSpawned && !bossKilled) {
-            currentEnemies[enemyIndex].hit = true;
-        }
-        currentEnemies[enemyIndex].health = currentEnemies[enemyIndex].health - shotPower;
-        if(currentEnemies[enemyIndex].health <= 0) {
-            currentEnemies.splice(enemyIndex, 1);
-			enemiesKilled += 1;
-			if(bossSpawned && !bossKilled) {
-                bossSpawned = false;
-                bossKilled = true;
-            }
-        }
-    }
-
- function spawnEnemiesIfNeeded() {
-        if (this.currentEnemies.length < 40 && !isBombActive && (timer < 30 || bossKilled)) {
-            var mongoEnemy = createMongoEnemy();
-            this.currentEnemies.push(mongoEnemy);
-			totalEnemies += 1;
-        } else if(timer > 30 && !bossKilled && !bossSpawned) {
-            this.currentEnemies = [];
-            this.currentEnemies.push(createBirstBoss());
-            bossSpawned = true;
-        }
-    }
-	
-	function spawnPowerUpIfNeeded() {
-		if (currentPowerup == null) {
-			if (Math.floor(Math.random() * 6) == 1) { //1 in 6 chance to generate a power up
-				currentPowerup = createPowerup();
-			}
-		}
-    }
-
-    function gameOver() {
-        clearInterval(drawInterval);
-        clearInterval(spawnEnemyInterval);
-        clearInterval(timerInterval);
-        setInterval(function () {
-			gameArea.clear();
-			gameArea.drawGameOver();
-        }, 500)
-    }
-	
-	function isHit(xPos1, yPos1, width1, height1, xPos2, yPos2, width2, height2) {
-        if (xPos1 < xPos2 + width2 &&
-                xPos1 + width1 > xPos2 &&
-                yPos1 < yPos2 + height2 &&
-                height1 + yPos1 > yPos2) {
-            return true;
-        }
-        return false;
-    }
-
-    function wrapText(context, text, x, y, maxWidth, lineHeight) {
-        var words = text.split(' ');
-        var line = '';
-
-        for(var n = 0; n < words.length; n++) {
-            var testLine = line + words[n] + ' ';
-            var metrics = context.measureText(testLine);
-            var testWidth = metrics.width;
-            if (testWidth > maxWidth && n > 0) {
-                context.fillText(line, x, y);
-                line = words[n] + ' ';
-                y += lineHeight;
-            }
-            else {
-                line = testLine;
-            }
-        }
-        context.fillText(line, x, y);
-    }
+	setTimeout(function(){
+		$('#titles').show();
+	}, 10000);
+});
 
 
 </script>
-<div style="height:80px">
-	<div style="float: left; width: 33%;">
-		<b>Score</b>
-		<div>Time on Soap Box: <span id='timeOnSoapBox' style="font-weight:bold">0</span><span style="font-weight:bold"> seconds</span></div>
-		<div>Mongo Instances Killed: <span id='mongosKilled' style="font-weight:bold">0/0</span></div>
-		<div>Mongo Kill %: <span id='mongosKilledPercentage' style="font-weight:bold">0%</span></div>
+</head>
+<body style="background-color: #565e61; color: white; font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif; ">
+
+	<div id='step1' style="color: #0396d8;
+		display: block;
+		font-size: 60px;
+		width: 800px;
+		height: 300px;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		margin: auto;">
+	Not that long ago in an office not that far away....
 	</div>
-	<div style="display: inline-block; width: 33%;">
-		<div style='font-size:40px;'>SQL DEFENDER</div>
+	
+	<div id='step2' style="color: yellow;
+		display: block;
+		font-size: 120px;
+		width: 500px;
+		height: 100px;
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		margin: auto;">
+	SQL Wars
 	</div>
-	<div style="float: right; width: 33%;">
-		<b>Controls</b>
-		<div>Arrow keys to move, Space to shoot, C to run a cursor</div>
-		<div>Cursor Status: <span id='cursorStatus' style="font-weight:bold">Available</span></div>
-		<div>Redgate Status: <span id='redgateStatus' style="font-weight:bold">License Expired</span></div>
-	</div>	
-</div>
+
+	<div id="titles">
+		<div id="titlecontent">
+		
+			<div style="color: yellow; padding-bottom: 80px; font-size: 60px; margin:auto; width:250px;">
+			Episode V
+			</div>
+			<div style="color: yellow; padding-bottom: 120px; font-size: 80px; margin:auto; width:875px;">
+			MONGODB STRIKES BACK
+			</div>
+			<div style="color: yellow; padding-bottom: 80px;">
+			It is a dark time for SQL Server. Although the single multi-tenant database has been destroyed, Mongo troops have driven the SQL databases from their applications and pursued them across the software development landscape.
+			</div>
+			<div style="color: yellow; padding-bottom: 80px;">
+			Evading the dreaded Mongo Leaf fleet, a group of SQL fighters led by Matt Watt has established a new secret base on the remote ice world of Minneapolis.
+			</div>
+			<div style="color: yellow">
+			The evil lord Burst, obsessed with finding young Watt, has dispatched thousands of remote Mongo leaves into the far reaches of Calabrio....
+			</div>
+
+		</div>
+	</div>
+	
+	<div>
+		SQL Wars - Click anywhere to play
+	</div>
 </body>
 </html>
+
 
