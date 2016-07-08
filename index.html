@@ -42,6 +42,23 @@
 	0% { top: 100%; }
 	100% { top: -170%; }
 }
+
+#sqlwars {
+    -webkit-transition: all 5000ms linear;
+    -moz-transition: all 5000ms linear;
+    -ms-transition: all 5000ms linear;
+    -o-transition: all 5000ms linear;
+    transition: all 5000ms linear;
+}
+#sqlwars.hidden {
+    -moz-opacity: 0;
+    opacity: 0;
+    -moz-transform: scale(0.01);
+    -webkit-transform: scale(0.01);
+    -o-transform: scale(0.01);
+    -ms-transform: scale(0.01);
+    transform: scale(0.01);
+}
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script>
@@ -52,7 +69,7 @@ window.addEventListener("click", function(e){
 	
 $( document ).ready(function() {
 
-	$('#step2').hide();
+	$('#sqlwars').hide();
 	$('#titles').hide();
 	
 	setTimeout(function(){
@@ -60,16 +77,16 @@ $( document ).ready(function() {
 	}, 3000);
 	
 	setTimeout(function(){
-		$('#step2').fadeIn(3000);
+		$('#sqlwars').show();
 	}, 6000);
 	
 	setTimeout(function(){
-		$('#step2').fadeOut(3000);
+		$('#sqlwars').addClass('hidden');
 	}, 10000);
 	
 	setTimeout(function(){
 		$('#titles').show();
-	}, 10000);
+	}, 12000);
 });
 
 
@@ -91,7 +108,7 @@ $( document ).ready(function() {
 	Not that long ago in an office not that far away....
 	</div>
 	
-	<div id='step2' style="color: yellow;
+	<div id='sqlwars' style="color: yellow;
 		display: block;
 		font-size: 120px;
 		width: 500px;
