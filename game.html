@@ -342,7 +342,9 @@
 					}
 				}
 				enemiesKilled += currentEnemies.length;
-				currentEnemies = [];
+				if(!bossSpawned || bossKilled) {
+					currentEnemies = [];
+				}
 			}
 		}
     }
@@ -553,7 +555,7 @@
     }
 
  function spawnEnemiesIfNeeded() {
-        if (this.currentEnemies.length < 40 && !isBombActive && (timer < 1 || bossKilled)) {
+        if (this.currentEnemies.length < 40 && !isBombActive && (timer < 30 || bossKilled)) {
             var mongoEnemy = createMongoEnemy();
             this.currentEnemies.push(mongoEnemy);
 			totalEnemies += 1;
