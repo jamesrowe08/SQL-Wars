@@ -60,37 +60,40 @@
     transform: scale(0.01);
 }
 </style>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+
+<script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+
+<script src="jquery.js"></script>
 <script>
 
-window.addEventListener("click", function(e){
-	window.location.href = "game.html";
-});
-	
-$( document ).ready(function() {
+    window.addEventListener("click", function(e){
+    	window.location.href = "game.html";
+    });
 
-	$('#sqlwars').hide();
-	$('#titles').hide();
-	
-	setTimeout(function(){
-		$('#step1').fadeOut(3000);
-	}, 3000);
-	
-	setTimeout(function(){
-		$('#sqlwars').show();
-	}, 6000);
-	
-	setTimeout(function(){
-		$('#sqlwars').addClass('hidden');
-	}, 10000);
-	
-	setTimeout(function(){
-		$('#titles').show();
-	}, 12000);
-});
+    $( document ).ready(function() {
 
+    	$('#sqlwars').hide();
+    	$('#titles').hide();
+
+    	setTimeout(function(){
+    		$('#step1').fadeOut(3000);
+    	}, 3000);
+
+    	setTimeout(function(){
+    		$('#sqlwars').show();
+    	}, 6000);
+
+    	setTimeout(function(){
+    		$('#sqlwars').addClass('hidden');
+    	}, 10000);
+
+    	setTimeout(function(){
+    		$('#titles').show();
+    	}, 12000);
+    });
 
 </script>
+
 </head>
 <body style="background-color: #565e61; color: white; font-family: Calibri,Candara,Segoe,Segoe UI,Optima,Arial,sans-serif; ">
 
@@ -107,7 +110,7 @@ $( document ).ready(function() {
 		margin: auto;">
 	Not that long ago in an office not that far away....
 	</div>
-	
+
 	<div id='sqlwars' style="color: yellow;
 		display: block;
 		font-size: 120px;
@@ -124,7 +127,7 @@ $( document ).ready(function() {
 
 	<div id="titles">
 		<div id="titlecontent">
-		
+
 			<div style="color: yellow; padding-bottom: 80px; font-size: 60px; margin:auto; width:250px;">
 			Episode V
 			</div>
@@ -143,15 +146,13 @@ $( document ).ready(function() {
 
 		</div>
 	</div>
-	
+
 	<div>
 		Click anywhere to play
 	</div>
-	
+
 	<audio onloadeddata="var audioPlayer = this; setTimeout(function() { audioPlayer.play(); }, 6000)">
 	  <source src="https://ia601703.us.archive.org/15/items/StarWarsThemeSongByJohnWilliams/Star%20Wars%20Theme%20Song%20By%20John%20Williams.mp3" type="audio/mpeg">
 	</audio>
 </body>
 </html>
-
-
